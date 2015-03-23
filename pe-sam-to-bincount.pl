@@ -21,6 +21,7 @@ my $m2 = 0;
 my $m3 = 0;
 my $m4 = 0;
 my $ss =0;
+my $help=0;
 my $end=0;
 my $ val=0;
 
@@ -29,19 +30,13 @@ my $filenames ="";
  
 ### processing  value entered in the command-line
 my %opts=();
-GetOptions(\%opts, "input=s", "window=i", "ref=s", "output=s" =>\$file_aln,  "trim5=i" => \$trim5,  "strand" => \$ss,  "end=i" => \$end, "min=i" => \$minc, "max=i" => \$maxc, ) or exit 1;
+GetOptions(\%opts, "input=s", "window=i", "ref=s", "output=s" =>\$file_aln,  "trim5=i" => \$trim5,  "strand" => \$ss,  "end=i" => \$end, "min=i" => \$minc, "max=i" => \$maxc, "help" => \$help) or exit 1;
+
+if($help){&help(); exit(0)}
 
 foreach my $field ("input", "window", "ref"){
     if ( ! exists $opts{$field} ){
-	print "### pe-sam-edit-v2.pl version 1.0 ###"; 
-	print "perl ~/tools/perl/pe-sam-edit-v2.pl -i [***.sam] --window [int] --ref [string] --trim5 [int] --strand --end [0, 1 or 2] --min [int] --max [int]\n\n";
-	print "--input;\tthe inputting sam file (required)\n";
-	print "--window;\tthe window size for bin-counting (required)\n";
-	print "--ref;\t\tthe location of the reference fasta file (required)\n";
-	print "--trim5;\tthe number of trimed base of  5' side during arigment by bowtie\n";
-	print "--strand;\tmake two (f & r) files to sort reads depending on the orientation\n";
-	print "--end;\t\t1:outputting the position of edge R1, 2:R2; 0:center (default)\n";
-	print "--min, --max;\tFor size selection, minimum and maximum length of inserts (seq of interest)\n";
+	&help();
 	die "\nThe option '--$field' is required.\n"; 
     }
 }
@@ -540,4 +535,17 @@ sub aln_sort{
     }
 
 close OUT;
+}
+
+sub help{
+	print "### pe-sam-edit-v2.pl version 1.0 ###\n"; 
+	print "perl ~/tools/perl/pe-sam-edit-v2.pl -i [***.sam] --window [int] --ref [string] --trim5 [int] --strand --end [0, 1 or 2] --min [int] --max [int]\n\n";
+	print "--input;\tthe inputting sam file (required)\n";
+	print "--window;\tthe window size for bin-counting (required)\n";
+	print "--ref;\t\tthe location of the reference fasta file (required)\n";
+	print "--trim5;\tthe number of trimed base of  5' side during arigment by bowtie\n";
+	print "--strand;\tmake two (f & r) files to sort reads depending on the orientation\n";
+	print "--end;\t\t1:outputting the position of edge R1, 2:R2; 0:center (default)\n";
+	print "--min, --max;\tFor size selection, minimum and maximum length of inserts (seq of interest)\n";
+
 }
