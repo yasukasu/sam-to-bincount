@@ -1,6 +1,6 @@
-# pe-sam-edit-v2.pl version 1.0
+# pe-sam-bincount.pl version 1.0
 ## Description
-From the sam files from pair-end reads
+From the sam files from pair-end reads  
 \- aligined reads are chosen (the outputted file: xxx.aln)  
 \- sorted based based on the chromosome and the position where reads are aligned to (the outputted file: xxx.sort.aln)   
 \- the number of reads in each bin (the indicated size) across the genome is counted (the outputted file: xxx.w[bin size].count.csv)  
