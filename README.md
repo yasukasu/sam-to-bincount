@@ -14,6 +14,6 @@ perl pe-sam-to-bincount.pl -i [xxx.sam] --window [int] --ref [xxx.fasta]  --trim
 --trim5:     the number of trimed base of  5' side during arigment by bowtie  
 --strand:   make two (f & r) files to sort reads depending on the orientation  
 --end:       1:outputting the position of the edge R1, 2:R2, 0:center (default)  
---min, --max:   For size selection, minimum and maximum length of inserts (seq of interest)  ## Options## Options
+--min, --max:   For size selection, minimum and maximum length of inserts (seq of interest)
 ## Example
 perl pe-sam-to-bincount.pl -i chip-seq.sam --window 300 --ref pombe.fasta  --trim5 2 --strand --end  1  --max 500
