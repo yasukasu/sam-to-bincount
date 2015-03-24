@@ -5,7 +5,7 @@ From the sam files from pair-end reads
 \- sorted based based on the chromosome and the position where reads are aligned to (the outputted file: xxx.sort.aln)   
 \- the number of reads in each bin (the indicated size) across the genome is counted (the outputted file: xxx.w[bin size].count.csv)  
 These proess sequencially are excuted.
-## Comannd
+## Comand
 perl pe-sam-to-bincount.pl -i [xxx.sam] --window [int] --ref [xxx.fasta]  --trim5 [int] --strand --end [0, 1 or 2] --min [int] --max [int]
 ## Options
 --input:        the inputting sam file (required)  
