@@ -1,15 +1,6 @@
 # /usr/bin/perl
 use strict;
 use Getopt::Long;
-#  pe-sam-edit-v2.pl version 1.0
-#  .sam (pair-end) to .count.csv 
-#  perl ~/tools/perl/pe-sam-edit-v2.pl -i [***.sam] --window [int] --ref [string] --trim5 [int] --strand --end [0, or 1 or ] --min [int] --max [int]
-#  --window; the widow size for bin-counting
-#  --ref; location of reference fasta files
-#  --trim5; the number of trimed base of  5' side during arigment by bowtie
-#  --strand; make two (f & r) files to sort reads depending on the orientation
-#  --end; 1: outputting the position of edge R1, 2:R2; 0:center
-# --min, --max; For size selection, minimum and maximum length of inserts (seq of interest)
 
 ### initail parameters
 
@@ -120,7 +111,7 @@ my $rn=0; # read length
 my $d = 0; #length of cluster
 my $pos_middle = 0;
  
-print "## Extracting alined PE-reads...\n";
+print "## Extracting aligned PE-reads...\n";
 
 while(<IN>){
 	chop;
@@ -277,6 +268,7 @@ sub bin_count{
 
     my $count = 0; 
     my $chro_count = 0;
+    my $chro_non_al = 0;
     my $win_x = 0; # position of the shiting window
 
 
@@ -294,14 +286,11 @@ sub bin_count{
 	if($chro eq @chro_name[$chro_num]){
 
 	    # when pos is out of chromosome-range...
-	    if($pos < (1-$trim5)  || (@chro_s[$chro_num] + $trim5) < $pos){
-		die "Warning: The position out of chro-range was detected (pos: $pos)\n";
-	    }
-	    elsif($pos < 1 || @chro_s[$chro_num] < $pos){next;}
+	    if($pos < 1 || @chro_s[$chro_num] < $pos){$chro_non_al++; next;}
 
-            # when the read is within the bin... 
-	    elsif($win_x < $pos && $pos <= ($win_x+$win_s)){$count++;}
-
+  
+          # when the read is within the bin... 
+	    if($win_x < $pos && $pos <= ($win_x+$win_s)){$count++;}
 	    
 	    # when the read is out of the bin... 
 	    elsif(($win_x+$win_s)< $pos){
@@ -347,10 +336,11 @@ sub bin_count{
 
 
             #chromsome report		
-	    &chro_report(@chro_name[$chro_num], @chro_s[$chro_num],  $chro_count, $win_num, $win_x, $win_s); 
+	    &chro_report(@chro_name[$chro_num], @chro_s[$chro_num],  $chro_count, $chro_non_al, $win_num, $win_x, $win_s); 
   	    
 	    # moving to the next chromosome...
 	    $chro_count = 0;
+	    $chro_non_al = 0;
 	    $chro_num++;
 	    $win_x = 0;
  	    $win_num =0;
@@ -386,7 +376,7 @@ sub bin_count{
 ($win_x, $win_num) = output_empty_bin($win_x, @chro_s[$chro_num], @chro_name[$chro_num], $win_s, $win_num);
 
 #chromsome report
-&chro_report(@chro_name[$chro_num], @chro_s[$chro_num],  $chro_count, $win_num, $win_x, $win_s); 
+&chro_report(@chro_name[$chro_num], @chro_s[$chro_num],  $chro_count, $chro_non_al, $win_num, $win_x, $win_s); 
 
 
 close(IN);
@@ -436,12 +426,13 @@ sub chro_report {
     my $chro_name = @_[0];
     my $chro_size = @_[1];
     my $chro_count =@_[2];
-    my $win_num = @_[3];
-    my $win_pos = @_[4];
-    my $win_size = @_[5];
+    my $chro_non_al =@_[3];
+    my $win_num = @_[4];
+    my $win_pos = @_[5];
+    my $win_size = @_[6];
 
 
-    print $chro_name, "\tsize = ", $chro_size, " bp\ttotal reads: ", $chro_count, "\tbins: ", $win_num, "\treads per window: ", int($chro_count/$win_num), "\n";   
+    print $chro_name, "\tsize:", $chro_size, " bp\ttotal reads:", $chro_count, "\tout of chro-range:", $chro_non_al, "\tbins:", $win_num, "\treads per window:", int($chro_count/$win_num), "\n";   
     if (($win_pos -$win_size) > $chro_size) {print "## warning! Some reads is out of the ", $chro_name, "-size. \n";}
 } 
 
@@ -538,7 +529,7 @@ close OUT;
 }
 
 sub help{
-	print "### pe-sam-edit-v2.pl version 1.0 ###\n"; 
+	print "### pe-sam-edit-v2.pl version 1.02 ###\n"; 
 	print "perl ~/tools/perl/pe-sam-edit-v2.pl -i [***.sam] --window [int] --ref [string] --trim5 [int] --strand --end [0, 1 or 2] --min [int] --max [int]\n\n";
 	print "--input;\tthe inputting sam file (required)\n";
 	print "--window;\tthe window size for bin-counting (required)\n";
