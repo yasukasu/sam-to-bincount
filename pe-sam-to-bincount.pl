@@ -14,14 +14,15 @@ my $m4 = 0;
 my $ss =0;
 my $help=0;
 my $end=0;
-my $ val=0;
+my $nei=0;
+my $val=0;
 
 my $file_aln = "output.aln";
 my $filenames ="";
  
 ### processing  value entered in the command-line
 my %opts=();
-GetOptions(\%opts, "input=s", "window=i", "ref=s", "output=s" =>\$file_aln,  "trim5=i" => \$trim5,  "strand" => \$ss,  "end=i" => \$end, "min=i" => \$minc, "max=i" => \$maxc, "help" => \$help) or exit 1;
+GetOptions(\%opts, "input=s", "window=i", "ref=s", "output=s" =>\$file_aln,  "trim5=i" => \$trim5,  "strand" => \$ss,  "end=i" => \$end, "min=i" => \$minc, "max=i" => \$maxc, "nei=i" => \$nei, "help" => \$help) or exit 1;
 
 if($help){&help(); exit(0)}
 
@@ -139,15 +140,15 @@ while(<IN>){
 	    if(!$ss){
 		if(($flag & 2) && ($flag & 32)){   # selecting read in which both ends are properly aligned.  
 
-		    if($end==1){$val = $pos-$trim5;} #left-side
-		    elsif($end==2){$val = $rpos+$rn+$trim5-1;}#right-side
+		    if($end==1){$val = $pos-$trim5-$nei;} #left-side
+		    elsif($end==2){$val = $rpos+$rn+$trim5-1+$nei;}#right-side
 		    else{$val =int(($pos+$rpos)/2);}
 		    print OUT $chro, "\t", $val, "\n";
 		}
 		elsif(($flag & 2) && ($flag & 16)){ 
 
-		    if($end==1){$val = $pos+$rn+$trim5-1;}#right-side
-		    elsif($end==2){$val = $rpos-$trim5;}
+		    if($end==1){$val = $pos+$rn+$trim5-1+$nei;}#right-side
+		    elsif($end==2){$val = $rpos-$trim5-$nei;}
 		    else{$val =int(($pos+$rpos)/2);}
 		    print OUT $chro, "\t", $val, "\n";
 		}
@@ -155,15 +156,15 @@ while(<IN>){
 	    else{     
 		if(($flag & 2) && ($flag & 32)){   # selecting read in which both ends are properly aligned.  
 
-		    if($end==1){$val = $pos-$trim5;}
-		    elsif($end==2){$val = $rpos+$rn+$trim5-1;}
+		    if($end==1){$val = $pos-$trim5-$nei;}
+		    elsif($end==2){$val = $rpos+$rn+$trim5-1+$nei;}
 		    else{$val = int(($pos+$rpos)/2);}
 		    print OUT1 $chro, "\t", $val, "\n";
 		}
 		elsif(($flag & 2) && ($flag & 16)){ 
 
-		    if($end==1){$val = $pos+$rn+$trim5-1;}
-		    elsif($end==2){$val = $rpos-$trim5;}
+		    if($end==1){$val = $pos+$rn+$trim5-1+$nei;}
+		    elsif($end==2){$val = $rpos-$trim5-$nei;}
 		    else{$val = int(($pos+$rpos)/2);}
 		    print OUT2 $chro, "\t", $val, "\n";
 		}
@@ -477,6 +478,8 @@ sub aln_sort{
     my %group=();
     my $n=0;
     my %chk=();
+    my $rstr = randstr(6);
+
 
     while (my $line = <IN>) {
 	chomp($line);
@@ -485,10 +488,15 @@ sub aln_sort{
 	push @{$group{$chr}}, int($pos);
 
 	if (@{$group{$chr}} == 1000) {   
-	    if (-e "$chr.tmp" &&  $chk{$chr}!=1){unlink "$chr.tmp"; print("$chr.tmp file is cleared.\n")}
+
+
+
+	    my $tmpfile = $rstr.".".$chr."."."tmp";
+
+	    if (-e $tmpfile &&  $chk{$chr}!=1){unlink $tmpfile;  print("The $tmpfile file is cleared.\n")}
 	    $chk{$chr}=1;
 	    
-	    open OUT, ">>$chr.tmp" or die "Can't open $chr.tmp: $!";
+	    open OUT, ">>$tmpfile" or die "Can't open $tmpfile: $!";
 	    print OUT join("\n", @{$group{$chr}})."\n";     
 	    close OUT;
 	    @{$group{$chr}} = ();          
@@ -504,15 +512,15 @@ sub aln_sort{
 
     my $tmp="";
     foreach my $chr (sort {$a cmp $b} keys %group) {
-	if (-e "$chr.tmp") {              # if there are temp file
-	    open IN, "$chr.tmp" or die "Can't open $chr.tmp: $!";
+	if (-e "$rstr.$chr.tmp") {              # if there are temp file
+	    open IN, "$rstr.$chr.tmp" or die "Can't open $rstr.$chr.tmp: $!";
 	    
 	    while(my $tmp = <IN>){
 		chomp($tmp);
 		push @{$group{$chr}}, $tmp+0;     # inputting arrray data
 	    }
 	    close IN;
-	    unlink "$chr.tmp" or die "Can't delete $chr.tmp: $!";    # deleting temp files
+	    unlink "$rstr.$chr.tmp" or die "Can't delete $rstr.$chr.tmp: $!";    # deleting temp files
 	}
 
 	my $n_chr =@{$group{$chr}};
@@ -528,6 +536,28 @@ sub aln_sort{
 close OUT;
 }
 
+sub randstr {
+    my $length = $_[0];
+
+    my @char_tmp=();
+
+    # storing  characters
+    # (a-z,A-Z, 0-9)
+    push @char_tmp, ('a'..'z');
+    push @char_tmp, ('A'..'Z');
+    push @char_tmp, (0..9);
+
+    # generating a indcated number of radom string.
+    my $rand_str_tmp = '';
+    my $i;
+    for ($i=1; $i<=$length; $i++) {
+    	$rand_str_tmp .= $char_tmp[int(rand($#char_tmp+1))];
+    }
+
+    return $rand_str_tmp;
+}
+
+
 sub help{
 	print "### pe-sam-edit-v2.pl version 1.02 ###\n"; 
 	print "perl ~/tools/perl/pe-sam-edit-v2.pl -i [***.sam] --window [int] --ref [string] --trim5 [int] --strand --end [0, 1 or 2] --min [int] --max [int]\n\n";
@@ -537,6 +567,7 @@ sub help{
 	print "--trim5;\tthe number of trimed base of  5' side during arigment by bowtie\n";
 	print "--strand;\tmake two (f & r) files to sort reads depending on the orientation\n";
 	print "--end;\t\t1:outputting the position of edge R1, 2:R2; 0:center (default)\n";
+	print "--nei\t\t;outputting postion shfited outward from the end by the indicated number (only in --end 1 or 2 mode)\n";
 	print "--min, --max;\tFor size selection, minimum and maximum length of inserts (seq of interest)\n";
 
 }
