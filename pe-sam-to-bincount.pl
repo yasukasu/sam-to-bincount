@@ -374,7 +374,7 @@ sub bin_count{
     $count = 0;
 
 # outputting the empty bins on the rest of chromosomal region
-($win_x, $win_num) = output_empty_bin($win_x, @chro_s[$chro_num], @chro_name[$chro_num], $win_s, $win_num);
+($win_x, $win_num) = output_empty_bin($win_x, @chro_s[$chro_num], @chro_name[$chro_num], $win_s, $win_num); 
 
 #chromsome report
 &chro_report(@chro_name[$chro_num], @chro_s[$chro_num],  $chro_count, $chro_non_al, $win_num, $win_x, $win_s); 
@@ -394,10 +394,10 @@ sub output_reads_bin{
     my $win_pos = @_[1];
     my $win_size = @_[2];
     my $count = @_[3];
-   	   
+
     
-    print OUT $chro, ",", $win_pos+$win_size/2, ",",  $count, "\n";
-     
+    if($win_size>1){ print OUT $chro, ",", $win_pos+$win_size/2, ",",  $count, "\n";}
+    else{ print OUT $chro, ",", $win_pos+1, ",",  $count, "\n";}
 }	    
 	  
 
@@ -560,14 +560,14 @@ sub randstr {
 
 sub help{
 	print "### pe-sam-edit-v2.pl version 1.02 ###\n"; 
-	print "perl ~/tools/perl/pe-sam-edit-v2.pl -i [***.sam] --window [int] --ref [string] --trim5 [int] --strand --end [0, 1 or 2] --min [int] --max [int]\n\n";
+	print "perl ~/tools/perl/pe-sam-edit-v2.pl -i [***.sam] --window [int] --ref [string] --trim5 [int] --strand --end [0, 1 or 2] --nei [int] --min [int] --max [int]\n\n";
 	print "--input;\tthe inputting sam file (required)\n";
 	print "--window;\tthe window size for bin-counting (required)\n";
 	print "--ref;\t\tthe location of the reference fasta file (required)\n";
 	print "--trim5;\tthe number of trimed base of  5' side during arigment by bowtie\n";
 	print "--strand;\tmake two (f & r) files to sort reads depending on the orientation\n";
 	print "--end;\t\t1:outputting the position of edge R1, 2:R2; 0:center (default)\n";
-	print "--nei\t\t;outputting postion shfited outward from the end by the indicated number (only in --end 1 or 2 mode)\n";
+	print "--nei;\t\toutputting postion shfited outward from the end by the indicated number (only in --end 1 or 2 mode)\n";
 	print "--min, --max;\tFor size selection, minimum and maximum length of inserts (seq of interest)\n";
 
 }
