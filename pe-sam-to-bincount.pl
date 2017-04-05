@@ -559,8 +559,8 @@ sub randstr {
 
 
 sub help{
-	print "### pe-sam-edit-v2.pl version 1.02 ###\n"; 
-	print "perl ~/tools/perl/pe-sam-edit-v2.pl -i [***.sam] --window [int] --ref [string] --trim5 [int] --strand --end [0, 1 or 2] --nei [int] --min [int] --max [int]\n\n";
+	print "###  Sam-to-Bincount version 1.03 ###\n"; 
+	print "perl sam-to-bincount.pl -i [***.sam] --window [int] --ref [string] --trim5 [int] --strand --end [0, 1 or 2] --nei [int] --min [int] --max [int]\n\n";
 	print "--input;\tthe inputting sam file (required)\n";
 	print "--window;\tthe window size for bin-counting (required)\n";
 	print "--ref;\t\tthe location of the reference fasta file (required)\n";
