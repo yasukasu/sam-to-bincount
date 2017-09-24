@@ -260,10 +260,6 @@ sub bin_count{
 
     my ($id_ref, $n_seq_ref) = extract_FASTA_info($file_ref);
 
-	print join(", ", @{$id_ref}, "\n");
-	print join(", ", @{$n_seq_ref}, "\n");
-
-
     my @chro_name =@{$id_ref};
     my @chro_s = @{$n_seq_ref};
 
@@ -460,10 +456,7 @@ sub extract_FASTA_info{
 
 	    $id[$i] =  (split /\s+/, substr($_, 1, length($_)))[0]; 
 	    
-	    print "$i => $id[$i]\n";
 	    next; 
-
-	    
 	}
 	
 	if($id[$i] eq ""){ die("Error during processing the fasta file.\n");}
@@ -571,7 +564,7 @@ sub randstr {
 
 
 sub help{
-	print "###  Sam-to-Bincount version 1.03 ###\n"; 
+	print "###  Sam-to-Bincount version 1.04 ###\n"; 
 	print "perl sam-to-bincount.pl -i [***.sam] --window [int] --ref [string] --trim5 [int] --strand --end [0, 1 or 2] --nei [int] --min [int] --max [int]\n\n";
 	print "--input;\tthe inputting sam file (required)\n";
 	print "--window;\tthe window size for bin-counting (required)\n";
