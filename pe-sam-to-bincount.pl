@@ -67,8 +67,6 @@ else {die "$file_in is not sam file.", "\n";}
 
 my $mod ="";
 
-if($minc && !$maxc){ $mod = ".min". $minc;}
-if(!$minc && $maxc){ $mod = ".max". $maxc;}
 if($minc && $maxc){ $mod = ".". $minc. "-". $maxc;}
 
 
@@ -194,17 +192,23 @@ if($minc || $maxc){
 print "Length of inserted seq: <200 N=", $m1, "; 201-400 N=", $m2, "; 401-600 N=", $m3, "; >600 N=", $m4, "\n";print "Number of first reads that was not aligned :\t", $var2, "\n";
 print "Number of second reads that was not aligned :\t", $var3, "\n";
 
+###
+
+
+
+
+
 
 ### Sorting data in aln files (making .sort.aln files)
 
 print "\n## Sorting aligned PE-reads...\n";
 
-if(!$ss){&aln_sort($file_aln);}
+if(!$ss){&aln_sort($file_aln, $file_ref );}
 else{
     print("f: watson str\n");
-    &aln_sort($file_aln1); 
+    &aln_sort($file_aln1, $file_ref); 
     print("r: Crick str\n");
-    &aln_sort($file_aln2);
+    &aln_sort($file_aln2, $file_ref);
 }
 
 ### Bin-counting
@@ -254,18 +258,14 @@ sub bin_count{
     my $win_num = 0;   # the number of windows on the chromosome 
     my $chro_num = 0;
 
-    my $xx=0;
-    my @chro_name =();
-    my @chro_s = ();
+    my ($id_ref, $n_seq_ref) = extract_FASTA_info($file_ref);
 
-    my %ref_data = &extract_FASTA_info($file_ref);
+	print join(", ", @{$id_ref}, "\n");
+	print join(", ", @{$n_seq_ref}, "\n");
 
-    for my $id (sort keys %ref_data){
-	@chro_name[$xx]=$id;
-	@chro_s[$xx]=$ref_data{$id};
-	$xx++;
-    }
 
+    my @chro_name =@{$id_ref};
+    my @chro_s = @{$n_seq_ref};
 
     my $count = 0; 
     my $chro_count = 0;
@@ -284,10 +284,10 @@ sub bin_count{
 	(my $chro, my $pos) = split /\t+/, $_;
 
 
-	if($chro eq @chro_name[$chro_num]){
+	if($chro eq $chro_name[$chro_num]){
 
 	    # when pos is out of chromosome-range...
-	    if($pos < 1 || @chro_s[$chro_num] < $pos){$chro_non_al++; next;}
+	    if($pos < 1 || $chro_s[$chro_num] < $pos){$chro_non_al++; next;}
 
   
           # when the read is within the bin... 
@@ -296,7 +296,7 @@ sub bin_count{
 	    # when the read is out of the bin... 
 	    elsif(($win_x+$win_s)< $pos){
 
-		&output_reads_bin(@chro_name[$chro_num], $win_x, $win_s, $count);
+		&output_reads_bin($chro_name[$chro_num], $win_x, $win_s, $count);
 
 		# shifting bin...
 		$win_x += $win_s;
@@ -305,7 +305,7 @@ sub bin_count{
 		$count = 0;
 
 		# outputting empty bins (if appliable)
-		($win_x, $win_num) = output_empty_bin($win_x, $pos-$win_s, @chro_name[$chro_num], $win_s, $win_num);		
+		($win_x, $win_num) = output_empty_bin($win_x, $pos-$win_s, $chro_name[$chro_num], $win_s, $win_num);		
 
 
 
@@ -321,10 +321,10 @@ sub bin_count{
 	}
 
         # when encountering the read on the next chromosome... 
-	elsif($chro eq @chro_name[$chro_num+1]) {
+	elsif($chro eq $chro_name[$chro_num+1]) {
 
 	    # outputting the bin being dealt with
-	    &output_reads_bin(@chro_name[$chro_num], $win_x, $win_s, $count);
+	    &output_reads_bin($chro_name[$chro_num], $win_x, $win_s, $count);
 
 	    # shifting bin...
 	    $win_x += $win_s;
@@ -333,11 +333,11 @@ sub bin_count{
 	    $count = 0;
 
 	    # outputting the empty bins on the rest of chromosomal region 
-	    ($win_x, $win_num) = output_empty_bin($win_x, @chro_s[$chro_num], @chro_name[$chro_num], $win_s, $win_num);
+	    ($win_x, $win_num) = output_empty_bin($win_x, $chro_s[$chro_num], $chro_name[$chro_num], $win_s, $win_num);
 
 
             #chromsome report		
-	    &chro_report(@chro_name[$chro_num], @chro_s[$chro_num],  $chro_count, $chro_non_al, $win_num, $win_x, $win_s); 
+	    &chro_report($chro_name[$chro_num], $chro_s[$chro_num],  $chro_count, $chro_non_al, $win_num, $win_x, $win_s); 
   	    
 	    # moving to the next chromosome...
 	    $chro_count = 0;
@@ -347,7 +347,7 @@ sub bin_count{
  	    $win_num =0;
 	    
 	    # outputting empty bins
-	    ($win_x, $win_num) = output_empty_bin($win_x, $pos-$win_s, @chro_name[$chro_num], $win_s, $win_num);
+	    ($win_x, $win_num) = output_empty_bin($win_x, $pos-$win_s, $chro_name[$chro_num], $win_s, $win_num);
 	    
             #when the read matched in the bin...
 	    $count++;  
@@ -357,7 +357,7 @@ sub bin_count{
 	    close(IN);
 	    close(OUT);
 	    $" = ", ";
-	    die "Error: Seq (chromosome) identity is not recognised. (ref seq contains '@chro_name')\n";
+	    die "Error: Seq (chromosome): identity is not recognised. (name: $chro, ref seq contains '@chro_name')\n";
 	}
     }
     
@@ -365,7 +365,7 @@ sub bin_count{
 
 
 #outputting the last bin of the last hromosome
-    &output_reads_bin(@chro_name[$chro_num], $win_x, $win_s, $count);
+    &output_reads_bin($chro_name[$chro_num], $win_x, $win_s, $count);
 
 # shifting bin...
     $win_x += $win_s;
@@ -374,10 +374,10 @@ sub bin_count{
     $count = 0;
 
 # outputting the empty bins on the rest of chromosomal region
-($win_x, $win_num) = output_empty_bin($win_x, @chro_s[$chro_num], @chro_name[$chro_num], $win_s, $win_num); 
+($win_x, $win_num) = output_empty_bin($win_x, $chro_s[$chro_num], $chro_name[$chro_num], $win_s, $win_num); 
 
 #chromsome report
-&chro_report(@chro_name[$chro_num], @chro_s[$chro_num],  $chro_count, $chro_non_al, $win_num, $win_x, $win_s); 
+&chro_report($chro_name[$chro_num], $chro_s[$chro_num],  $chro_count, $chro_non_al, $win_num, $win_x, $win_s); 
 
 
 close(IN);
@@ -442,8 +442,10 @@ sub chro_report {
 sub extract_FASTA_info{
 
     my $file_seq =@_[0];
-    my $id ="";
-    my %n_seq=();
+    my @id =();
+    my @n_seq=();
+
+    my $i=-1;
 
     open SEQ, $file_seq or die "Ref:$file_seq could not be opened!\n";
 
@@ -452,18 +454,25 @@ sub extract_FASTA_info{
 
 	my $c = substr($_, 0, 1);
 	
-	if ($c eq ">")
-	{
+	if ($c eq ">"){
  
-	    $id =  (split /\s+/, substr($_, 1, length($_)))[0]; 
+	    $i++;	    
+
+	    $id[$i] =  (split /\s+/, substr($_, 1, length($_)))[0]; 
+	    
+	    print "$i => $id[$i]\n";
 	    next; 
+
+	    
 	}
-	if($id eq ""){ die("Error during processing the fasta file.\n");} 
-	$n_seq{$id} = $n_seq{$id}+length($_);
+	
+	if($id[$i] eq ""){ die("Error during processing the fasta file.\n");}
+        $n_seq[$i] = $n_seq[$i]+length($_);
+
 
     }
     close(SEQ);
-    return(%n_seq);
+    return(\@id, \@n_seq);
 }
 
 # Opening aln files and sorting data inside
@@ -471,8 +480,11 @@ sub extract_FASTA_info{
 sub aln_sort{
 
     my $file_in = @_[0];
+    my $file_ref = @_[1];    
+    
+
     (my $file_out = $file_in) =~ s/.aln$/.sort.aln/;
-     
+    my ($chro_list_ref, $n_seq_ref) = extract_FASTA_info($file_ref);  
 
     open IN, $file_in  or die "Can't open $file_in.";
     my %group=();
@@ -511,7 +523,7 @@ sub aln_sort{
     open OUT, ">$file_out" or die "Can't open outfile: $!";
 
     my $tmp="";
-    foreach my $chr (sort {$a cmp $b} keys %group) {
+    foreach my $chr (@{$chro_list_ref}) {  
 	if (-e "$rstr.$chr.tmp") {              # if there are temp file
 	    open IN, "$rstr.$chr.tmp" or die "Can't open $rstr.$chr.tmp: $!";
 	    
@@ -531,7 +543,7 @@ sub aln_sort{
 	}
 
 	@{$group{$chr}} = ();
-    }
+   }
 
 close OUT;
 }
