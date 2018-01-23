@@ -219,12 +219,13 @@ print "\n## Counting the number of reads in each $win_s bin...\n";
 
 if(!$ss){
     (my $file_sorted  = $file_aln) =~ s/.aln$/.sort.aln/;
-    &bin_count($file_sorted, $win_s, $file_ref, $trim5);
+    &bin_count($file_sorted, $win_s, $file_ref, $trim5, $fa_id_ref, $fa_n_ref);
 }
 else{
     (my $file_sorted1  = $file_aln1) =~ s/.aln$/.sort.aln/;
     (my $file_sorted2  = $file_aln2) =~ s/.aln$/.sort.aln/;
     print("f: watson str\n");
+    print("id-ref => $fa_id_ref\n")
     &bin_count($file_sorted1, $win_s, $file_ref, $trim5, $fa_id_ref, $fa_n_ref);
     print("r: Crick str\n");
     &bin_count($file_sorted2, $win_s, $file_ref, $trim5, $fa_id_ref, $fa_n_ref);
