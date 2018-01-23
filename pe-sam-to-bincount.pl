@@ -225,7 +225,6 @@ else{
     (my $file_sorted1  = $file_aln1) =~ s/.aln$/.sort.aln/;
     (my $file_sorted2  = $file_aln2) =~ s/.aln$/.sort.aln/;
     print("f: watson str\n");
-    print("id-ref => $fa_id_ref\n")
     &bin_count($file_sorted1, $win_s, $file_ref, $trim5, $fa_id_ref, $fa_n_ref);
     print("r: Crick str\n");
     &bin_count($file_sorted2, $win_s, $file_ref, $trim5, $fa_id_ref, $fa_n_ref);
